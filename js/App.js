@@ -1,52 +1,80 @@
 import React, { Component } from 'react';
-import Button from './components/Button';
 
+import SearchBar from './components/SearchBar/index';
+import Toolbar from './components/Toolbar/index';
+import UserList from './components/UserList/index';
+import ActiveUser from './components/ActiveUser/index';
 
 export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      phrase: 'Нажми на кнопку!',
-      count: 0
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            users: this.props.usersArr,
+            ageDirection: true,
+            nameDirection: true,
+            activeUser: 0
+        };
+
+        this.handleSearch = this.handleSearch.bind(this);
+        this.sortByAge = this.sortByAge.bind(this);
+        this.sortByName = this.sortByName.bind(this);
+        this.setActiveUser = this.setActiveUser.bind(this);
+    }
+
+    handleSearch (value) {
+        const users = this.props.usersArr.filter((item) => item.name.toLowerCase().includes(value.toLowerCase()));
+        const userId = users.length ? users[0].id : 0
+
+        this.setState({
+            users: users,
+            activeUser: userId
+        });
     };
-  }
 
-  updateBtn() {
-    const phrases = [
-      'ЖМИ!', 'Не останавливайся!',
-      'У тебя хорошо получается!', 'Красавчик!',
-      'Вот это и есть React!', 'Продолжай!',
-      'Пока ты тут нажимаешь кнопку другие работают!',
-      'Всё хватит!', 'Ну и зачем ты нажал?',
-      'В следующий раз тут будет полезный совет',
-      'Чего ты ждешь от этой кнопки?',
-      'Если дойдёшь до тысячи, то сразу научищься реакту',
-      'ой, всё!', 'Ты нажал кнопку столько раз, что обязан на ней жениться',
-      'У нас было 2 npm-пакета с реактом, 75 зависимостей от сторонних библиотек, '
-      + '5 npm-скриптов и целое множество плагинов галпа всех сортов и расцветок, '
-      + 'а также redux, jquery, mocha, пачка плагинов для eslint и ингерация с firebase. '
-      + 'Не то что бы это был необходимый набор для фронтенда. Но если начал собирать '
-      + 'вебпаком, становится трудно остановиться. Единственное, что вызывало у меня '
-      + 'опасения - это jquery. Нет ничего более беспомощного, безответственного и испорченного, '
-      + 'чем рядовой верстальщик без jquery. Я знал, что рано или поздно мы перейдем и на эту дрянь.',
-      'coub про кота-джедая: http://coub.com/view/spxn',
-      'Дальнобойщики на дороге ярости: http://coub.com/view/6h0dy',
-      'Реакция коллег на ваш код: http://coub.com/view/5rjjw',
-      'Енот ворует еду: http://coub.com/view/xi3cio',
-      'Российский дизайн: http://coub.com/view/16adw5i0'
-    ];
-    this.setState({
-      count: this.state.count + 1,
-      phrase: phrases[parseInt(Math.random() * phrases.length)]
-    });
-  }
+    sortByAge () {
+        const { users, ageDirection: direction }  = this.state;
 
-  render() {
-    return (
-      <div className="container app">
-        <Button count={this.state.count} update={this.updateBtn.bind(this)} />
-        <p style={{marginTop: 2 + 'rem'}}>{this.state.phrase}</p>
-      </div>
-    );
-  }
+        this.setState({
+            users: direction ? [...users].sort((a,b) => a.age - b.age) : [...users].sort((a,b) => b.age - a.age),
+            ageDirection: !direction,
+            activeUser: users[0].id // TODO: new user state create new const and add users here
+        });
+    }
+
+    sortByName() {
+        //TODO: how in sortByAge
+        const users = this.state.users;
+        const direction = this.state.nameDirection;
+        const sortedUsers = users.sort(direction ? (a,b) => a.name > b.name ? 1 : -1 : (a,b) => a.name < b.name ? 1 : -1);
+
+        this.setState({
+            users: sortedUsers,
+            nameDirection: !direction,
+            activeUser: users[0].id
+        });
+    }
+
+    setActiveUser(activeUser) {
+        this.setState({ activeUser })
+    }
+
+    render() {
+      return(
+          <section className="container">
+            <div className="row">
+                <SearchBar searchFunc={this.handleSearch}/>
+            </div>
+            <div className="row">
+            <Toolbar sortByAge={this.sortByAge} sortByName={this.sortByName}/>
+            </div>
+            <div className="row">
+                <ActiveUser activeUser={this.state.users.find((item) => item.id === this.state.activeUser)}/>
+                <UserList users={this.state.users} clickUser={this.setActiveUser}/>
+            </div>
+          </section>
+      )
+    }
 }
+
+
